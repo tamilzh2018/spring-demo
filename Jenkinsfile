@@ -15,7 +15,7 @@ pipeline {
                 cleanWs()
             }
         }
-        stage("sonar quality gate") {
+        stage("Sonar Quality Analysis") {
             agent {
                 docker {
                     image 'maven:3-openjdk-17'
@@ -30,8 +30,17 @@ pipeline {
                         -Dsonar.host.url=${SONAR_HOST_URL} \
                         -Dsonar.login=${SONAR_TOKEN}
                     """
+                    timeout(time: 5, unit: 'MINUTES') {
+    
+                        def qg = waitForQualityGate()
+                        if (qg.status != 'OK') {
+                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                        }
+                    }
+                    
                 }
             }
         }
+
     }
 }
