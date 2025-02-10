@@ -2,6 +2,9 @@ pipeline {
     agent any
     environment {
         SONAR_PROJECT_KEY = 'demo'
+        VERSION = "${env.BUILD_NUMBER}"
+        NEXUS_CREDENTIALS_ID = 'nexus-credentials'
+        NEXUS_URL = 'nexus_url'
     }
     stages {
         stage("git checkout") {
@@ -22,7 +25,7 @@ pipeline {
             }
             steps {
                 script {
-                    withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN'), string(credentialsId: 'sonar-server-url', variable: 'SONAR_HOST_URL')]) {
+                    withCredentials([string(credentialsId: "sonar-token", variable: "SONAR_TOKEN"), string(credentialsId: "sonar-server-url", variable: "SONAR_HOST_URL")]) {
                         echo "Running SonarQube Analysis"
                         withSonarQubeEnv('SonarQube') {
                             sh """
@@ -44,6 +47,18 @@ pipeline {
                         if (qg.status != 'OK') {
                             error "Pipeline aborted due to quality gate failure: ${qg.status}"
                         }
+                    }
+                }
+            }
+        }
+        stage('Docker Build & Docker Push') {
+            steps {
+                sh '''
+                    docker build -t ${NEXUS_URL}/spring-demo:${VERSION} .
+                    docker login ${NEXUS_CREDENTIALS_ID} ${NEXUS_URL}
+                    docker push ${NEXUS_URL}/spring-demo:${VERSION}
+                    docker rmi ${NEXUS_URL}/spring-demo:${VERSION}
+                '''
                     }
                 }
             }
