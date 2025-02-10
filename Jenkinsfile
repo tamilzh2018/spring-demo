@@ -53,19 +53,17 @@ pipeline {
         }
         stage('Docker Build & Docker Push') {
             steps {
-                    script {
-                        // This step should not normally be used in your script. Consult the inline help for details.
-                        withDockerRegistry([credentialsId: "${NEXUS_CREDENTIALS_ID}", url: "${NEXUS_URL}"]) {
-                            '''docker build -t ${NEXUS_URL}/spring-demo:${VERSION} .
-                            docker login ${NEXUS_CREDENTIALS_ID} ${NEXUS_URL}
+                script {
+                    withDockerRegistry([credentialsId: "${NEXUS_CREDENTIALS_ID}", url: "${NEXUS_URL}"]) {
+                        sh """
+                            docker build -t ${NEXUS_URL}/spring-demo:${VERSION} .
+                            docker login -u ${NEXUS_CREDENTIALS_ID} -p $(echo $password) ${NEXUS_URL}
                             docker push ${NEXUS_URL}/spring-demo:${VERSION}
                             docker rmi ${NEXUS_URL}/spring-demo:${VERSION}
-                            '''
-                        }
+                        """
                     }
                 }
             }
-
         }
     }
 }
