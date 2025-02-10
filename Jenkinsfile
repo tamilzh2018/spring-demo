@@ -18,7 +18,7 @@ pipeline {
         stage("sonar quality gate") {
             agent {
                 docker {
-                    image 'maven:3-alpine'
+                    image 'maven:3-openjdk-17'
                 }
             }
             steps {
