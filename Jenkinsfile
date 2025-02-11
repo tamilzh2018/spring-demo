@@ -32,7 +32,7 @@ pipeline {
                         echo "Running SonarQube Analysis"
                         withSonarQubeEnv('SonarQube') {
                             sh """
-                                mvn sonar:sonar \
+                                mvn clean install sonar:sonar \
                                 -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
                                 -Dsonar.host.url=${SONAR_HOST_URL} \
                                 -Dsonar.login=${SONAR_TOKEN}
@@ -54,26 +54,26 @@ pipeline {
                 }
             }
         }
-        stage('Maven Build') {
+        /* stage('Maven Build') {
             steps {
                 script {
                     sh "mvn clean package"
                 }
             }
-        }
+        } */
         stage('Docker Build & Docker Push') {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'Nexus-Credentials', passwordVariable: 'nexus-password', usernameVariable: 'nexus-username')]) {
                         sh """
-                            docker build -t ${${DOCKER_REPO}}/spring-demo:${VERSION} .
-                            if echo ${DOCKER_PASSWORD} | docker login --username ${DOCKER_USERNAME} --password-stdin ${DOCKER_REPO}; then
+                            docker build -t 10.0.0.130:8083/spring-demo:${VERSION} .
+                            if echo ${DOCKER_PASSWORD} | docker login --username ${DOCKER_USERNAME} --password-stdin 10.0.0.130:8083; then
                                 echo "Login successful!"
                                 else
                                 echo "Login failed."
                             fi
-                            docker push ${NEXUS_URL}/spring-demo:${VERSION}
-                            docker rmi ${NEXUS_URL}/spring-demo:${VERSION}
+                            docker push 10.0.0.130:8083/spring-demo:${VERSION}
+                            docker rmi 10.0.0.130:8083/spring-demo:${VERSION}
                         """
                     }
                 }
