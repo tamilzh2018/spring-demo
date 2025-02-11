@@ -66,10 +66,14 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'Nexus-Credentials', passwordVariable: 'nexus-password', usernameVariable: 'nexus-username')]) {
                         sh """
-                            docker build -t ${NEXUS_URL}/spring-demo:${VERSION} .
-                            docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD} ${NEXUS_URL}
-                            docker push ${NEXUS_URL}/spring-demo:${VERSION}
-                            docker rmi ${NEXUS_URL}/spring-demo:${VERSION}
+                            docker build -t ${DOCKER_REPO}/spring-demo:${VERSION} .
+                            if echo ${DOCKER_PASSWORD} | docker login --username ${DOCKER_USERNAME} --password-stdin ${DOCKER_REPO}; then
+                                echo "Login successful!"
+                                else
+                                echo "Login failed."
+                            fi
+                            docker push ${DOCKER_REPO}/spring-demo:${VERSION}
+                            docker rmi ${DOCKER_REPO}/spring-demo:${VERSION}
                         """
                     }
                 }
