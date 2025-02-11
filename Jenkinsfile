@@ -4,6 +4,8 @@ pipeline {
         SONAR_PROJECT_KEY = 'demo'
         VERSION = "${env.BUILD_NUMBER}"
         NEXUS_CREDENTIALS_ID = 'Nexus-Credentials'
+        DOCKER_PASSWORD = 'docker-password'
+        DOCKER_USERNAME = 'docker-username'
         NEXUS_URL = 'nexus_url'
         DOCKER_REPO = 'Docker-Repo'
     }
@@ -65,7 +67,7 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: 'Nexus-Credentials', passwordVariable: 'nexus-password', usernameVariable: 'nexus-username')]) {
                         sh """
                             docker build -t ${NEXUS_URL}/spring-demo:${VERSION} .
-                            docker login ${NEXUS_CREDENTIALS_ID} ${NEXUS_URL}
+                            docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD} ${NEXUS_URL}
                             docker push ${NEXUS_URL}/spring-demo:${VERSION}
                             docker rmi ${NEXUS_URL}/spring-demo:${VERSION}
                         """
