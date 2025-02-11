@@ -52,6 +52,13 @@ pipeline {
                 }
             }
         }
+        stage('Maven Build') {
+            steps {
+                script {
+                    sh "mvn clean package"
+                }
+            }
+        }
         stage('Docker Build & Docker Push') {
             steps {
                 script {
