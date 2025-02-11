@@ -84,5 +84,17 @@ pipeline {
                 }
             }
         }
+        stage('indentifying helm file misconfigs using datree/trivy'){
+            steps{
+                script{
+                        dir('kubernetes/')
+                        //withEnv(['DATREE_TOKEN=<your-account-token>']) {
+                              //sh 'datree test demo-app/'} docker image scan:trivy image $APP_NAME:latest
+                              sh 'trivy config demo-app/'
+                        
+
+                }
+            }
+        }
     }
 }
