@@ -4,10 +4,8 @@ pipeline {
         SONAR_PROJECT_KEY = 'demo'
         VERSION = "${env.BUILD_NUMBER}"
         NEXUS_CREDENTIALS_ID = 'Nexus-Credentials'
-        DOCKER_PASSWORD = 'docker-password'
-        DOCKER_USERNAME = 'docker-username'
         NEXUS_URL = 'nexus_url'
-        DOCKER_REPO = 'docker-repo'
+
     }
     stages {
         stage("git checkout") {
@@ -64,18 +62,25 @@ pipeline {
         stage('Docker Build & Docker Push') {
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: 'Nexus-Credentials', passwordVariable: 'nexus-password', usernameVariable: 'nexus-username')]) {
-                        sh """
-                            docker build -t 10.0.0.130:8083/spring-demo:${VERSION} .
-                            if echo ${DOCKER_PASSWORD} | docker login --username ${DOCKER_USERNAME} --password-stdin 10.0.0.130:8083; then
+                    withCredentials([
+                        string(credentialsId: 'docker-username', variable: 'DOCKER_USER'),
+                        string(credentialsId: 'docker-password', variable: 'DOCKER_PASS'),
+                        string(credentialsId: 'docker-repo', variable: 'DOCKER_URL')
+                    ]) {
+                            // Access the variables here
+                            sh """
+                            docker build -t ${env.DOCKER_URL}/spring-demo:${VERSION} .
+                            if echo ${env.DOCKER_PASS} | docker login --username ${env.DOCKER_USER} --password-stdin ${env.DOCKER_URL}; then
                                 echo "Login successful!"
                                 else
                                 echo "Login failed."
                             fi
-                            docker push 10.0.0.130:8083/spring-demo:${VERSION}
-                            docker rmi 10.0.0.130:8083/spring-demo:${VERSION}
+                            docker push ${env.DOCKER_URL}/spring-demo:${VERSION}
+                            docker rmi ${env.DOCKER_URL}/spring-demo:${VERSION}
                         """
-                    }
+                        }
+                        
+                    
                 }
             }
         }
