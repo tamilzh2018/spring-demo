@@ -5,6 +5,7 @@ pipeline {
         VERSION = "${env.BUILD_NUMBER}"
         NEXUS_CREDENTIALS_ID = 'nexus-credentials'
         NEXUS_URL = 'nexus_url'
+        DOCKER_REPO = 'Docker-Repo'
     }
     stages {
         stage("git checkout") {
@@ -57,7 +58,7 @@ pipeline {
                     withDockerRegistry([credentialsId: "${NEXUS_CREDENTIALS_ID}", url: "${NEXUS_URL}"]) {
                         sh """
                             docker build -t ${NEXUS_URL}/spring-demo:${VERSION} .
-                            docker login -u ${NEXUS_CREDENTIALS_ID} -p $(echo $password) ${NEXUS_URL}
+                            docker login ${NEXUS_CREDENTIALS_ID} ${NEXUS_URL}
                             docker push ${NEXUS_URL}/spring-demo:${VERSION}
                             docker rmi ${NEXUS_URL}/spring-demo:${VERSION}
                         """
