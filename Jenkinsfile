@@ -3,7 +3,7 @@ pipeline {
     environment {
         SONAR_PROJECT_KEY = 'demo'
         VERSION = "${env.BUILD_NUMBER}"
-        NEXUS_CREDENTIALS_ID = 'nexus-credentials'
+        NEXUS_CREDENTIALS_ID = 'Nexus-Credentials'
         NEXUS_URL = 'nexus_url'
         DOCKER_REPO = 'Docker-Repo'
     }
@@ -13,17 +13,17 @@ pipeline {
                 git 'https://github.com/tamilzh2018/spring-demo.git'
             }
         }
-        stage('Clean Workspace') {
+        /* stage('Clean Workspace') {
             steps {
                 cleanWs()
             }
-        }
+        } */
         stage("Sonar Quality Analysis") {
-            agent {
+            /* agent {
                 docker {
                     image 'maven:3-openjdk-17'
                 }
-            }
+            } */
             steps {
                 script {
                     withCredentials([string(credentialsId: "sonar-token", variable: "SONAR_TOKEN"), string(credentialsId: "sonar-server-url", variable: "SONAR_HOST_URL")]) {
@@ -55,7 +55,7 @@ pipeline {
         stage('Docker Build & Docker Push') {
             steps {
                 script {
-                    withDockerRegistry([credentialsId: "${NEXUS_CREDENTIALS_ID}", url: "${NEXUS_URL}"]) {
+                    withCredentials([usernamePassword(credentialsId: 'Nexus-Credentials', passwordVariable: 'nexus-password', usernameVariable: 'nexus-username')]) {
                         sh """
                             docker build -t ${NEXUS_URL}/spring-demo:${VERSION} .
                             docker login ${NEXUS_CREDENTIALS_ID} ${NEXUS_URL}
