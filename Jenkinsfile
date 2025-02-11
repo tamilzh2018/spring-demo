@@ -7,7 +7,7 @@ pipeline {
         DOCKER_PASSWORD = 'docker-password'
         DOCKER_USERNAME = 'docker-username'
         NEXUS_URL = 'nexus_url'
-        DOCKER_REPO = 'Docker-Repo'
+        DOCKER_REPO = 'docker-repo'
     }
     stages {
         stage("git checkout") {
@@ -66,14 +66,14 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'Nexus-Credentials', passwordVariable: 'nexus-password', usernameVariable: 'nexus-username')]) {
                         sh """
-                            docker build -t ${DOCKER_REPO}/spring-demo:${VERSION} .
+                            docker build -t ${${DOCKER_REPO}}/spring-demo:${VERSION} .
                             if echo ${DOCKER_PASSWORD} | docker login --username ${DOCKER_USERNAME} --password-stdin ${DOCKER_REPO}; then
                                 echo "Login successful!"
                                 else
                                 echo "Login failed."
                             fi
-                            docker push ${DOCKER_REPO}/spring-demo:${VERSION}
-                            docker rmi ${DOCKER_REPO}/spring-demo:${VERSION}
+                            docker push ${NEXUS_URL}/spring-demo:${VERSION}
+                            docker rmi ${NEXUS_URL}/spring-demo:${VERSION}
                         """
                     }
                 }
