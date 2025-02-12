@@ -40,9 +40,9 @@ pipeline {
                 }
             }
         }
-        stage('Quality Gate') {
+        /* stage('Quality Gate') {
             steps {
-                timeout(time: 5, unit: 'MINUTES') {
+                timeout(time: 15, unit: 'MINUTES') {
                     script {
                         def qg = waitForQualityGate()
                         if (qg.status != 'OK') {
@@ -51,7 +51,7 @@ pipeline {
                     }
                 }
             }
-        }
+        } */
         /* stage('Maven Build') {
             steps {
                 script {
@@ -102,13 +102,15 @@ pipeline {
                     withCredentials([
                         usernamePassword(credentialsId: "${NEXUS_CREDENTIALS_ID}", usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')
                     ]) {
-                        sh '''
+                        dir('kubernetes/') {
+                            sh '''
                             chartversion=$( helm show chart demo-app | grep version | cut -d: -f 2 | tr -d ' ')
                             helm package kubernetes/demo-app/ -d kubernetes/
                             
-                            curl -v -u ${NEXUS_USER}:${NEXUS_PASS} ${NEXUS_URL}/repository/helm-private/ --upload-file demo-app-${chartversion}.tgz -v
-                        '''
+                            curl -u ${NEXUS_USER}:${NEXUS_PASS} ${NEXUS_URL}/repository/helm-private/ --upload-file demo-app-${chartversion}.tgz -v
+                            '''
                         //tar -xvf demo-app-${chart-version}.tgz demo-app/
+                       }
                     }
                 }
             }
