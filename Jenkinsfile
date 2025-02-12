@@ -100,7 +100,7 @@ pipeline {
             steps {
                 script {
                     withCredentials([
-                        usernamePassword(credentialsId: "${NEXUS_CREDENTIALS_ID}", usernameVariable: 'HELM_USER', passwordVariable: 'HELM_PASS')
+                        usernamePassword(credentialsId: "${NEXUS_CREDENTIALS_ID}", usernameVariable: 'HELM_USER', passwordVariable: 'HELM_PASS'),
                         string(credentialsId: 'helm-url', variable: 'HELM_URL')
                     ]) {
                         dir('kubernetes/') {
@@ -108,7 +108,7 @@ pipeline {
                             chartversion=$( helm show chart demo-app | grep version | cut -d: -f 2 | tr -d ' ')
                             helm package demo-app
                             
-                            curl -u ${HELM_USER}:${HELM_PASS} ${HELM_URL}/repository/helm-private/ --upload-file demo-app-${chartversion}.tgz -v
+                            curl -u ${HELM_USER}:${HELM_PASS} ${HELM_URL} --upload-file demo-app-${chartversion}.tgz -v
                             '''
                         //tar -xvf demo-app-${chart-version}.tgz demo-app/
                        }
