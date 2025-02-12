@@ -87,14 +87,32 @@ pipeline {
         stage('indentifying helm file misconfigs using datree/trivy'){
             steps{
                 script{
-                        dir('kubernetes/')
-                        //withEnv(['DATREE_TOKEN=<your-account-token>']) {
-                              //sh 'datree test demo-app/'} docker image scan:trivy image $APP_NAME:latest
+                        dir('kubernetes/') {
+                        //withEnv(['DATREE_TOKEN=<your-account-token> from datree.io']) {
+                              //sh 'datree test demo-app/'} docker image scan:trivy image $APP_NAME:latest or trivy image --severity HIGH,CRITICAL <your-container-image>
                               sh 'trivy config demo-app/'
-                        
+                        }
 
+                    }
+                }
+        }
+        stage('Push Helm Chart to Nexus') {
+            steps {
+                script {
+                    withCredentials([
+                        usernamePassword(credentialsId: "${NEXUS_CREDENTIALS_ID}", usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')
+                    ]) {
+                        sh """
+                            chart-version=$( helm show chart demo-app/ | grep version | cut -d: -f 2 | tr -d ' ')
+                            helm package kubernetes/demo-app/ -d kubernetes/
+                            
+                            curl -v -u ${NEXUS_USER}:${NEXUS_PASS} ${NEXUS_URL}/repository/helm-private/ --upload-file demo-app-${chart-version}.tgz -v
+                        """
+                        //tar -xvf kubernetes/demo-app-${chart-version}.tgz
+                    }
                 }
             }
         }
+        
     }
 }
