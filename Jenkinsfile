@@ -123,7 +123,7 @@ pipeline {
                             sh '''
                                 echo "DOCKER_URL: ${env.DOCKER_URL}"
                                 echo "VERSION: ${VERSION}"
-                                helm upgrade --install --set image.repository="${env.DOCKER_URL}/spring-demo" --set image.tag="${VERSION}" spring-demo demo-app/
+                                helm upgrade --install --set image.repository=${env.DOCKER_URL}/spring-demo --set image.tag=${VERSION} spring-demo demo-app/
                                 kubectl get pods 
                             '''
                         }    
