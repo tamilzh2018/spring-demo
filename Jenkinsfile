@@ -4,7 +4,7 @@ pipeline {
         SONAR_PROJECT_KEY = 'demo'
         VERSION = "${env.BUILD_NUMBER}"
         NEXUS_CREDENTIALS_ID = 'Nexus-Credentials'
-        NEXUS_URL = 'nexus_url'
+        
 
     }
     stages {
@@ -106,8 +106,7 @@ pipeline {
                         dir('kubernetes/') {
                             sh '''
                             chartversion=$( helm show chart demo-app | grep version | cut -d: -f 2 | tr -d ' ')
-                            helm package demo-app
-                            
+                            helm package demo-app                            
                             curl -u ${HELM_USER}:${HELM_PASS} ${HELM_URL} --upload-file demo-app-${chartversion}.tgz -v
                             '''
                         //tar -xvf demo-app-${chart-version}.tgz demo-app/
@@ -116,6 +115,20 @@ pipeline {
                 }
             }
         }
-        
+        stage('Kubernetes Validation throgh Kubernetes CLI plugin') {
+            steps {
+                script {
+                    withKubeConfig([credentialsId: 'k8s-jenkins-config', serverUrl: '']) {
+                        dir('kubernetes/') {
+                            sh '''
+                                helm upgrade --install --set image.repository="${env.DOCKER_URL}/spring-demo" --set image.tag="${VERSION}" spring-demo demo-app/
+                                kubectl get pods                        
+                            '''
+                        }    
+                    }
+                }
+               
+            }
+        }
     }
 }
