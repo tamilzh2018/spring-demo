@@ -14,28 +14,8 @@ pool:
   vmImage: ubuntu-latest
 
 stages:
-  - stage: 'Junit'
-    displayName: 'Java Unit test Stage'
-    jobs:
-    - job: 'JunitTest'
-      displayName: 'Junit Test Job'
-      steps:
-      - script: echo 'Running Spring demo app unit test with iniline script'
-
-      - task: Maven@4
-        inputs:
-          goals: 'clean test'
-          codeCoverageToolOption: 'None'
-
-      - task: PublishCodeCoverageResults@2
-        inputs:
-          codeCoverageTool: 'JaCoCo'
-          summaryFileLocation: '$(System.DefaultWorkingDirectory)/target/site/jacoco/jacoco.xml'
-          reportDirectory: '$(System.DefaultWorkingDirectory)/target/site/jacoco' 
   - stage: 'BuildArtifact'
     displayName: 'Building java artifacts'
-    condition: and(succeeded(),ne(variables['Build.Reason'],'PullRequest')) # previous steps should succeed and build reason should not be pull request
-    dependsOn: 'Junit' 
     jobs:
     - job: 'BuildArtifact'
       displayName: 'Building java artifacts'
@@ -66,3 +46,29 @@ stages:
           PathtoPublish: '$(Build.ArtifactStagingDirectory)'
           ArtifactName: 'spring-demo'
           publishLocation: 'Container'
+  - stage: 'DockerImage'
+    displayName: 'Build Docker Image'
+    condition: and(succeeded(),ne(variables['Build.Reason'],'PullRequest')) # previous steps should succeed and build reason should not be pull request
+    dependsOn: 'BuildArtifact' 
+    jobs:
+    - job: 'DockerImagejob'
+      displayName: 'Build Docker Image and Push to ACR'
+      steps:
+      - task: DownloadBuildArtifacts@0
+        inputs:
+          buildType: 'current'
+          downloadType: 'single'
+          artifactName: 'spring-demo'
+          downloadPath: '.'
+      - task: CopyFiles@2
+        inputs:
+          SourceFolder: 'spring-demo'
+          Contents: '*.jar'
+          TargetFolder: '$(build.artifactstagingdirectory)/s/spring-demo'
+
+      - task: Docker@2
+        inputs:
+          containerRegistry: 'azure-devops-container-registry'
+          repository: 'springdemo'
+          command: 'buildAndPush'
+          Dockerfile: '$(build.artifactstagingdirectory)/s/spring-demo/Dockerfile'
