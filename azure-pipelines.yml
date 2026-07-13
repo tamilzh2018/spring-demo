@@ -13,6 +13,7 @@ stages:
     - job: 'JunitTest'
       displayName: 'Junit Test Job'
       steps:
+      - script: echo 'Running Spring demo app unit test with iniline script'
       - task: Maven@4
         inputs:
           mavenPomFile: 'pom.xml'
