@@ -1,7 +1,7 @@
 # Demo Spring AzurePipeline
 
 trigger:
-- master
+- azure-devops-pipeline
 
 pool:
   vmImage: ubuntu-latest
