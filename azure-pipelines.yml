@@ -71,4 +71,4 @@ stages:
           containerRegistry: 'azure-devops-container-registry'
           repository: 'springdemo'
           command: 'buildAndPush'
-          Dockerfile: '**/Dockerfile'
+          Dockerfile: '$(build.artifactstagingdirectory)/s/spring-demo/Dockerfile'
