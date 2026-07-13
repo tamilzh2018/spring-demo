@@ -58,13 +58,8 @@ stages:
         inputs:
           buildType: 'current'
           downloadType: 'single'
-          artifactName: 'spring-demo'
-          downloadPath: '.'
-      - task: CopyFiles@2
-        inputs:
-          SourceFolder: 'spring-demo'
-          Contents: '*.jar'
-          TargetFolder: '$(build.artifactstagingdirectory)/s/spring-demo'
+          artifactName: 'target'
+          downloadPath: '$(Build.SourcesDirectory)'
 
       - task: Docker@2
         inputs:
@@ -72,4 +67,5 @@ stages:
           repository: $(imageRepository)
           command: 'buildAndPush'
           Dockerfile: $(dockerfilePath)
+          buildContext: '$(Build.SourcesDirectory)'
           tags: '$(Build.BuildId)'
