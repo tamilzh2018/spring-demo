@@ -33,6 +33,8 @@ stages:
           reportDirectory: '$(System.DefaultWorkingDirectory)/target/site/jacoco' 
   - stage: 'BuildArtifact'
     displayName: 'Building java artifacts'
+    condition: and(succeeded(),ne(variables['Build.Reason'],'PullRequest')) # previous steps should succeed and build reason should not be pull request
+    dependsOn: 'Junit' 
     jobs:
     - job: 'BuildArtifact'
       displayName: 'Building java artifacts'
