@@ -68,7 +68,8 @@ stages:
 
       - task: Docker@2
         inputs:
-          containerRegistry: 'azure-devops-container-registry'
-          repository: 'springdemo'
+          containerRegistry: $(dockerRegistryServiceConnection)
+          repository: $(imageRepository)
           command: 'buildAndPush'
-          Dockerfile: '$(build.artifactstagingdirectory)/s/spring-demo/Dockerfile'
+          Dockerfile: $(dockerfilePath)
+          tags: '$(Build.BuildId)'
