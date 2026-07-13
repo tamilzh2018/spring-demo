@@ -21,6 +21,7 @@ stages:
       displayName: 'Junit Test Job'
       steps:
       - script: echo 'Running Spring demo app unit test with iniline script'
+
       - task: Maven@4
         inputs:
           goals: 'clean test'
@@ -52,3 +53,16 @@ stages:
           effectivePomSkip: false
           sonarQubeRunAnalysis: false
 
+      - task: CopyFiles@2
+        inputs:
+          SourceFolder: '$(agent.builddirectory)/s/target'
+          Contents: '*.jar'
+          TargetFolder: '$(build.artifactstagingdirectory)'
+          CleanTargetFolder: true
+          OverWrite: true
+
+      - task: PublishBuildArtifacts@1
+        inputs:
+          PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+          ArtifactName: 'spring-demo'
+          publishLocation: 'Container'
