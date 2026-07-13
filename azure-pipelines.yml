@@ -58,7 +58,7 @@ stages:
         inputs:
           buildType: 'current'
           downloadType: 'single'
-          artifactName: 'target'
+          artifactName: 'spring-demo'
           downloadPath: '$(Build.SourcesDirectory)'
 
       - task: Docker@2
