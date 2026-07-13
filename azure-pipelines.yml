@@ -16,17 +16,11 @@ stages:
       - script: echo 'Running Spring demo app unit test with iniline script'
       - task: Maven@4
         inputs:
-          mavenPomFile: 'pom.xml'
           goals: 'clean test'
-          publishJUnitResults: true
-          testResultsFiles: '**/surefire-reports/TEST-*.xml'
-          codeCoverageToolOption: 'JaCoCo'
-          javaHomeOption: 'JDKVersion'
-          mavenVersionOption: 'Default'
-          mavenAuthenticateFeed: false
-          effectivePomSkip: false
-          sonarQubeRunAnalysis: false
-          checkStyleRunAnalysis: true
-          pmdRunAnalysis: true
-          findBugsRunAnalysis: true
-          spotBugsRunAnalysis: true
+          codeCoverageToolOption: 'None'
+
+      - task: PublishCodeCoverageResults@2
+        inputs:
+          codeCoverageTool: 'JaCoCo'
+          summaryFileLocation: '$(System.DefaultWorkingDirectory)/target/site/jacoco/jacoco.xml'
+          reportDirectory: '$(System.DefaultWorkingDirectory)/target/site/jacoco'
