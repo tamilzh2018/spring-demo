@@ -1,7 +1,14 @@
 # Demo Spring AzurePipeline
 
 trigger:
-- azure-devops-pipeline
+  branches:
+    include:
+      - master
+# Any pull request raise to this branch, run the pipeline
+pr:
+  branches:
+    include:
+      - master
 
 pool:
   vmImage: ubuntu-latest
@@ -23,4 +30,23 @@ stages:
         inputs:
           codeCoverageTool: 'JaCoCo'
           summaryFileLocation: '$(System.DefaultWorkingDirectory)/target/site/jacoco/jacoco.xml'
-          reportDirectory: '$(System.DefaultWorkingDirectory)/target/site/jacoco'
+          reportDirectory: '$(System.DefaultWorkingDirectory)/target/site/jacoco' 
+  - stage: 'BuildArtifact'
+    displayName: 'Building java artifacts'
+    jobs:
+    - job: 'BuildArtifact'
+      displayName: 'Building java artifacts'
+      steps:
+      - task: Maven@4
+        inputs:
+          mavenPomFile: 'pom.xml'
+          goals: 'clean package'
+          options: '--no-transfer-progress'
+          publishJUnitResults: true
+          testResultsFiles: '**/surefire-reports/TEST-*.xml'
+          javaHomeOption: 'JDKVersion'
+          mavenVersionOption: 'Default'
+          mavenAuthenticateFeed: false
+          effectivePomSkip: false
+          sonarQubeRunAnalysis: false
+
