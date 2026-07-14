@@ -54,26 +54,4 @@ stages:
           PathtoPublish: '$(Build.ArtifactStagingDirectory)'
           ArtifactName: 'spring-demo'
           publishLocation: 'Container'
-  - stage: 'DockerImage'
-    displayName: 'Build Docker Image'
-    condition: and(succeeded(),ne(variables['Build.Reason'],'PullRequest')) # previous steps should succeed and build reason should not be pull request
-    dependsOn: 'BuildArtifact' 
-    jobs:
-    - job: 'DockerImagejob'
-      displayName: 'Build Docker Image and Push to ACR'
-      steps:
-      - task: DownloadBuildArtifacts@0
-        inputs:
-          buildType: 'current'
-          downloadType: 'single'
-          artifactName: 'spring-demo'
-          downloadPath: '$(Build.SourcesDirectory)'
 
-      - task: Docker@2
-        inputs:
-          containerRegistry: $(dockerRegistryServiceConnection)
-          repository: $(imageRepository)
-          command: 'buildAndPush'
-          Dockerfile: $(dockerfilePath)
-          buildContext: '$(Build.SourcesDirectory)'
-          tags: '$(Build.BuildId)'
