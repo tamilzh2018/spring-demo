@@ -11,8 +11,7 @@ pr:
       - master
 
 pool:
-  name: Default
-  # vmImage: ubuntu-latest
+  vmImage: ubuntu-latest
 
 stages:
   - stage: 'BuildArtifact'
@@ -20,17 +19,7 @@ stages:
     jobs:
     - job: 'BuildArtifact'
       displayName: 'Building java artifacts'
-
       steps:
-      - script: |
-          echo JAVA_HOME=%JAVA_HOME%
-          echo MAVEN_HOME=%MAVEN_HOME%
-          where java
-          where mvn
-          java -version
-          mvn -version
-        displayName: Check Java Maven
-
       - task: Maven@4
         inputs:
           mavenPomFile: 'pom.xml'
@@ -38,9 +27,12 @@ stages:
           options: '--no-transfer-progress'
           publishJUnitResults: true
           testResultsFiles: '**/surefire-reports/TEST-*.xml'
-          javaHomeOption: 'Path'
-          jdkDirectory: 'C:\Program Files\Java\jdk-17'
+          javaHomeOption: 'JDKVersion'
           mavenVersionOption: 'Default'
+          mavenAuthenticateFeed: false
+          effectivePomSkip: false
+          sonarQubeRunAnalysis: false
+
       - task: CopyFiles@2
         inputs:
           SourceFolder: '$(agent.builddirectory)/s/target'
@@ -54,4 +46,49 @@ stages:
           PathtoPublish: '$(Build.ArtifactStagingDirectory)'
           ArtifactName: 'spring-demo'
           publishLocation: 'Container'
+  - stage: 'DockerImage'
+    displayName: 'Build Docker Image'
+    condition: and(succeeded(),ne(variables['Build.Reason'],'PullRequest')) # previous steps should succeed and build reason should not be pull request
+    dependsOn: 'BuildArtifact' 
+    jobs:
+    - job: 'DockerImagejob'
+      displayName: 'Build Docker Image and Push to ACR'
+      steps:
+      - task: DownloadBuildArtifacts@0
+        inputs:
+          buildType: 'current'
+          downloadType: 'single'
+          artifactName: 'spring-demo'
+          downloadPath: '$(Build.SourcesDirectory)'
 
+      - task: Docker@2
+        inputs:
+          containerRegistry: $(dockerRegistryServiceConnection)
+          repository: $(imageRepository)
+          command: 'buildAndPush'
+          Dockerfile: $(dockerfilePath)
+          buildContext: '$(Build.SourcesDirectory)'
+          tags: '$(Build.BuildId)'
+  - stage: 'DockerImage'
+    displayName: 'Build Docker Image'
+    condition: and(succeeded(),ne(variables['Build.Reason'],'PullRequest')) # previous steps should succeed and build reason should not be pull request
+    dependsOn: 'BuildArtifact' 
+    jobs:
+    - job: 'DockerImagejob'
+      displayName: 'Build Docker Image and Push to ACR'
+      steps:
+      - task: DownloadBuildArtifacts@0
+        inputs:
+          buildType: 'current'
+          downloadType: 'single'
+          artifactName: 'spring-demo'
+          downloadPath: '$(Build.SourcesDirectory)'
+
+      - task: Docker@2
+        inputs:
+          containerRegistry: $(dockerRegistryServiceConnection)
+          repository: $(imageRepository)
+          command: 'buildAndPush'
+          Dockerfile: $(dockerfilePath)
+          buildContext: '$(Build.SourcesDirectory)'
+          tags: '$(Build.BuildId)'
