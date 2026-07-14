@@ -31,42 +31,7 @@ stages:
     displayName: Build Spring Boot JAR
 
     steps:
-      - task: Maven@4
-        inputs:
-          mavenPomFile: 'pom.xml'
-          goals: 'clean package'
-          options: '--no-transfer-progress'
-          publishJUnitResults: true
-          testResultsFiles: '**/surefire-reports/TEST-*.xml'
-          javaHomeOption: 'JDKVersion'
-          mavenVersionOption: 'Default'
-          mavenAuthenticateFeed: false
-          effectivePomSkip: false
-          sonarQubeRunAnalysis: false
-
-      - task: CopyFiles@2
-        inputs:
-          SourceFolder: '$(agent.builddirectory)/s/target'
-          Contents: '*.jar'
-          TargetFolder: '$(build.artifactstagingdirectory)'
-          CleanTargetFolder: true
-          OverWrite: true
-
-      - task: PublishBuildArtifacts@1
-        inputs:
-          PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-          ArtifactName: 'spring-demo'
-          publishLocation: 'Container'
-      - script: |
-          echo "Sources Directory:"
-          ls -R $(Build.SourcesDirectory)
-
-          echo "Pipeline Workspace:"
-          ls -R $(Pipeline.Workspace)
-
-          echo "Artifact Staging:"
-          ls -R $(Build.ArtifactStagingDirectory)
-        displayName: "List files"
+      - template: 'templates/build.yaml'
 
 # ==========================
 # Build & Push Docker Image
@@ -81,27 +46,4 @@ stages:
     displayName: Build Docker Image
 
     steps:
-    - task: DownloadBuildArtifacts@0
-      inputs:
-        buildType: current
-        downloadType: single
-        artifactName: spring-demo
-        downloadPath: '$(Pipeline.Workspace)'
-
-    # Copy downloaded JAR into source directory if Dockerfile expects it
-    - task: CopyFiles@2
-      inputs:
-        SourceFolder: '$(Pipeline.Workspace)/spring-demo'
-        Contents: '*.jar'
-        TargetFolder: '$(Build.SourcesDirectory)/target'
-
-    - task: Docker@2
-      displayName: Build and Push Image
-      inputs:
-        containerRegistry: '$(dockerRegistryServiceConnection)'
-        repository: '$(imageRepository)'
-        command: 'buildAndPush'
-        Dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
-        buildContext: '$(Build.SourcesDirectory)'
-        tags: |
-          $(tag)
+      - template: 'templates/dockerize.yaml'
