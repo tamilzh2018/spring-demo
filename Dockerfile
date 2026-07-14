@@ -1,4 +1,7 @@
-FROM openjdk:17.0.1-jdk-oracle
+FROM eclipse-temurin:17-jre
+
 WORKDIR /app
-COPY spring-demo/*.jar /app.jar
-CMD ["java", "-jar", "/app.jar"]
+
+COPY target/*.jar app.jar
+
+ENTRYPOINT ["java","-jar","app.jar"]
