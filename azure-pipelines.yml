@@ -1,94 +1,94 @@
-# Demo Spring AzurePipeline
-
 trigger:
   branches:
     include:
       - master
-# Any pull request raise to this branch, run the pipeline
+
 pr:
   branches:
     include:
       - master
 
+variables:
+  dockerRegistryServiceConnection: '0c41c105-34f3-4bc2-a577-e0219f561aed'
+  imageRepository: 'tamilzhspringdemo'
+  containerRegistry: 'springdemo.azurecr.io'
+  dockerfilePath: 'Dockerfile'
+  tag: '$(Build.BuildId)'
+
 pool:
-  vmImage: ubuntu-latest
+  vmImage: 'ubuntu-latest'
 
 stages:
-  - stage: 'BuildArtifact'
-    displayName: 'Building java artifacts'
-    jobs:
-    - job: 'BuildArtifact'
-      displayName: 'Building java artifacts'
-      steps:
-      - task: Maven@4
-        inputs:
-          mavenPomFile: 'pom.xml'
-          goals: 'clean package'
-          options: '--no-transfer-progress'
-          publishJUnitResults: true
-          testResultsFiles: '**/surefire-reports/TEST-*.xml'
-          javaHomeOption: 'JDKVersion'
-          mavenVersionOption: 'Default'
-          mavenAuthenticateFeed: false
-          effectivePomSkip: false
-          sonarQubeRunAnalysis: false
 
-      - task: CopyFiles@2
-        inputs:
-          SourceFolder: '$(agent.builddirectory)/s/target'
-          Contents: '*.jar'
-          TargetFolder: '$(build.artifactstagingdirectory)'
-          CleanTargetFolder: true
-          OverWrite: true
+# ==========================
+# Build Java Artifact
+# ==========================
+- stage: BuildArtifact
+  displayName: Build Java Artifact
 
-      - task: PublishBuildArtifacts@1
-        inputs:
-          PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-          ArtifactName: 'spring-demo'
-          publishLocation: 'Container'
-  - stage: 'DockerImage'
-    displayName: 'Build Docker Image'
-    condition: and(succeeded(),ne(variables['Build.Reason'],'PullRequest')) # previous steps should succeed and build reason should not be pull request
-    dependsOn: 'BuildArtifact' 
-    jobs:
-    - job: 'DockerImagejob'
-      displayName: 'Build Docker Image and Push to ACR'
-      steps:
-      - task: DownloadBuildArtifacts@0
-        inputs:
-          buildType: 'current'
-          downloadType: 'single'
-          artifactName: 'spring-demo'
-          downloadPath: '$(Build.SourcesDirectory)'
+  jobs:
+  - job: BuildArtifact
+    displayName: Build Spring Boot JAR
 
-      - task: Docker@2
-        inputs:
-          containerRegistry: $(dockerRegistryServiceConnection)
-          repository: $(imageRepository)
-          command: 'buildAndPush'
-          Dockerfile: $(dockerfilePath)
-          buildContext: '$(Build.SourcesDirectory)'
-          tags: '$(Build.BuildId)'
-  - stage: 'DockerImage'
-    displayName: 'Build Docker Image'
-    condition: and(succeeded(),ne(variables['Build.Reason'],'PullRequest')) # previous steps should succeed and build reason should not be pull request
-    dependsOn: 'BuildArtifact' 
-    jobs:
-    - job: 'DockerImagejob'
-      displayName: 'Build Docker Image and Push to ACR'
-      steps:
-      - task: DownloadBuildArtifacts@0
-        inputs:
-          buildType: 'current'
-          downloadType: 'single'
-          artifactName: 'spring-demo'
-          downloadPath: '$(Build.SourcesDirectory)'
+    steps:
+    - task: Maven@4
+      inputs:
+        mavenPomFile: 'pom.xml'
+        goals: 'clean package'
+        options: '--no-transfer-progress'
+        publishJUnitResults: true
+        testResultsFiles: '**/surefire-reports/TEST-*.xml'
+        javaHomeOption: 'JDKVersion'
+        mavenVersionOption: 'Default'
 
-      - task: Docker@2
-        inputs:
-          containerRegistry: $(dockerRegistryServiceConnection)
-          repository: $(imageRepository)
-          command: 'buildAndPush'
-          Dockerfile: $(dockerfilePath)
-          buildContext: '$(Build.SourcesDirectory)'
-          tags: '$(Build.BuildId)'
+    - task: CopyFiles@2
+      inputs:
+        SourceFolder: '$(Build.SourcesDirectory)/target'
+        Contents: '*.jar'
+        TargetFolder: '$(Build.ArtifactStagingDirectory)'
+        CleanTargetFolder: true
+        OverWrite: true
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'spring-demo'
+        publishLocation: 'Container'
+
+# ==========================
+# Build & Push Docker Image
+# ==========================
+- stage: DockerImage
+  displayName: Build and Push Docker Image
+  dependsOn: BuildArtifact
+  condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+
+  jobs:
+  - job: DockerImageJob
+    displayName: Build Docker Image
+
+    steps:
+    - task: DownloadBuildArtifacts@0
+      inputs:
+        buildType: current
+        downloadType: single
+        artifactName: spring-demo
+        downloadPath: '$(Pipeline.Workspace)'
+
+    # Copy downloaded JAR into source directory if Dockerfile expects it
+    - task: CopyFiles@2
+      inputs:
+        SourceFolder: '$(Pipeline.Workspace)/spring-demo'
+        Contents: '*.jar'
+        TargetFolder: '$(Build.SourcesDirectory)'
+
+    - task: Docker@2
+      displayName: Build and Push Image
+      inputs:
+        containerRegistry: '$(dockerRegistryServiceConnection)'
+        repository: '$(imageRepository)'
+        command: 'buildAndPush'
+        Dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
+        buildContext: '$(Build.SourcesDirectory)'
+        tags: |
+          $(tag)
