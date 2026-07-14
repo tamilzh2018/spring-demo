@@ -10,8 +10,8 @@ pr:
     include:
       - master
 
-pool:
-  vmImage: ubuntu-latest
+pool: SelfHostedAgent
+  # vmImage: ubuntu-latest
 
 stages:
   - stage: 'BuildArtifact'
