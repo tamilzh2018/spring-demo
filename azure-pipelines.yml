@@ -30,7 +30,8 @@ stages:
           options: '--no-transfer-progress'
           publishJUnitResults: true
           testResultsFiles: '**/surefire-reports/TEST-*.xml'
-          javaHomeOption: 'JDKVersion'
+          javaHomeOption: 'Path'
+          jdkDirectory: 'C:\Program Files\Java\jdk-24'
           mavenVersionOption: 'Default'
           mavenAuthenticateFeed: false
           effectivePomSkip: false
