@@ -10,7 +10,8 @@ pr:
     include:
       - master
 
-pool: SelfHostedAgent
+pool: 
+  name: Default
   # vmImage: ubuntu-latest
 
 stages:
