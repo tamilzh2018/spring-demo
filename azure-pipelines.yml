@@ -10,9 +10,8 @@ pr:
     include:
       - master
 
-pool: 
+pool:
   name: Default
-
   # vmImage: ubuntu-latest
 
 stages:
@@ -29,8 +28,7 @@ stages:
           options: '--no-transfer-progress'
           publishJUnitResults: true
           testResultsFiles: '**/surefire-reports/TEST-*.xml'
-          javaHomeOption: 'Path'
-          jdkDirectory: 'C:\Program Files\Java\jdk-24'
+          javaHomeOption: 'JDKVersion'
           mavenVersionOption: 'Default'
           mavenAuthenticateFeed: false
           effectivePomSkip: false
@@ -62,12 +60,7 @@ stages:
           buildType: 'current'
           downloadType: 'single'
           artifactName: 'spring-demo'
-          downloadPath: '.'
-      - task: CopyFiles@2
-        inputs:
-          SourceFolder: 'spring-demo'
-          Contents: '*.jar'
-          TargetFolder: '$(build.artifactstagingdirectory)/s/spring-demo'
+          downloadPath: '$(Build.SourcesDirectory)'
 
       - task: Docker@2
         inputs:
@@ -75,4 +68,5 @@ stages:
           repository: $(imageRepository)
           command: 'buildAndPush'
           Dockerfile: $(dockerfilePath)
+          buildContext: '$(Build.SourcesDirectory)'
           tags: '$(Build.BuildId)'
