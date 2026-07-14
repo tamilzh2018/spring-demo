@@ -12,6 +12,8 @@ pr:
 
 pool: 
   name: Default
+  demands:
+  - maven
   # vmImage: ubuntu-latest
 
 stages:
