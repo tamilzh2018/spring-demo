@@ -19,6 +19,17 @@ pool:
   vmImage: 'ubuntu-latest'
 
 stages:
+# ==========================
+# Build Numbers Based on Bracnhes
+# ==========================
+- stage: BuildBranchName
+  displayName: Build Branch Name
+
+  jobs:
+  - job: BuildBranchNameJob
+    displayName: Build Branch Name Job
+    steps:
+    - template: 'templates/buildNumbers.yaml'
 
 # ==========================
 # Build Java Artifact
