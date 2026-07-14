@@ -27,10 +27,13 @@ stages:
 
   jobs:
   - job: BuildBranchNameJob
+    variables:
+      branchName: $Build.SourceBranch
+      branchPRNumber: $[counter(variables['System.PullRequest.PullRequestId'], 0)]
+      branchBuildNumber: $[counter(variables['Build.SourceBranch'], 0)]
     displayName: Build Branch Name Job
     steps:
     - template: 'templates/buildNumbers.yaml'
-
 # ==========================
 # Build Java Artifact
 # ==========================

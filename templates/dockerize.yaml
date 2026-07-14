@@ -1,0 +1,25 @@
+steps:
+- task: DownloadBuildArtifacts@0
+  inputs:
+    buildType: current
+    downloadType: single
+    artifactName: spring-demo
+    downloadPath: '$(Pipeline.Workspace)'
+
+# Copy downloaded JAR into source directory if Dockerfile expects it
+- task: CopyFiles@2
+  inputs:
+    SourceFolder: '$(Pipeline.Workspace)/spring-demo'
+    Contents: '*.jar'
+    TargetFolder: '$(Build.SourcesDirectory)/target'
+
+- task: Docker@2
+  displayName: Build and Push Image
+  inputs:
+    containerRegistry: '$(dockerRegistryServiceConnection)'
+    repository: '$(imageRepository)'
+    command: 'buildAndPush'
+    Dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
+    buildContext: '$(Build.SourcesDirectory)'
+    tags: |
+      $(tag)
