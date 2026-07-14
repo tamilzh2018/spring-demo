@@ -20,7 +20,17 @@ stages:
     jobs:
     - job: 'BuildArtifact'
       displayName: 'Building java artifacts'
+
       steps:
+      - script: |
+          echo JAVA_HOME=%JAVA_HOME%
+          echo MAVEN_HOME=%MAVEN_HOME%
+          where java
+          where mvn
+          java -version
+          mvn -version
+        displayName: Check Java Maven
+
       - task: Maven@4
         inputs:
           mavenPomFile: 'pom.xml'
@@ -31,7 +41,6 @@ stages:
           javaHomeOption: 'Path'
           jdkDirectory: 'C:\Program Files\Java\jdk-17'
           mavenVersionOption: 'Default'
-
       - task: CopyFiles@2
         inputs:
           SourceFolder: '$(agent.builddirectory)/s/target'
